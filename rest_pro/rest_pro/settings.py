@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+LOGIN_REDIRECT_URL = 'profile'
 
 # Application definition
 
@@ -38,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'bootstrap3'
+    'bootstrap3',
+    'users.apps.UsersConfig',
+    'accounts.apps.AccountsConfig'
 ]
 
 MIDDLEWARE = [
