@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base_account.html' %}
 {% load static %}
 {% load bootstrap3 %}
 {% bootstrap_css %}
@@ -7,6 +7,79 @@
 {% block title %}
 <title>Home</title>
 {% endblock %}
+{% block head %}
+<script src="{% static 'angular.js' %}"></script>
+<script src="{% static 'google_chart.js' %}"></script>
+{% endblock %}
 {% block content %}
 <h3>Welcome {{user.username}}!!</h3>
+<div ng-app="chartApp" ng-controller="charCtrl">
+    <table class="table">
+        <tr>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Description</th>
+        </tr>
+        <tr ng-repeat="items in data">
+            <td>$$items.category$$</td>
+            <td>$$items.price | currency:"₹":0$$</td>
+            <td>$$items.description$$</td>
+        </tr>
+    </table>
+<p class="text-right">
+    <a href="{% url 'add_details' %}">
+            <span class="glyphicon glyphicon-plus">
+            </span>
+        Add Expense
+    </a>
+</p>
+ <div google-chart chart="myChartObject" style="height:370px; width:100%;"></div>
+</div>
+<script type="text/javascript">
+	username = "{{user.id}}"
+	console.log(username);
+     var chart = angular.module('chartApp',['googlechart']);
+     chart.config(function($interpolateProvider) {
+    $interpolateProvider.startSymbol('$$');
+    $interpolateProvider.endSymbol('$$');
+  });
+    chart.controller('charCtrl',function($scope,$http){
+        $http({
+            method : 'POST',
+            url : 'http://localhost:8000/accounts/api/profile/',
+            data : username,
+        }).then(function succesCallback(response){
+        	console.log('success');
+        	 $scope.field = [];
+            $scope.data = response.data['table_data'];
+            console.log($scope.data);
+            for(let i=0 ; i<$scope.data.length ; i++){
+                var price = {} ,dict = {}, params =[];
+                dict['v'] = $scope.data[i]['category'];
+                params.push(dict);
+                price['v'] = $scope.data[i]['price'];
+                params.push(price);
+                $scope.field.push({c:params});
+            }
+            console.log($scope.field);
+             $scope.myChartObject = {};
+    $scope.myChartObject.type = "PieChart";
+    $scope.myChartObject.data = {"cols": [
+        {id: "t", label: "Category", type: "string"},
+        {id: "s", label: "Prices", type: "number"}
+    ], "rows": $scope.field
+};
+    $scope.myChartObject.options = {
+        'title': 'Expense Chart'
+    };
+        },function errorCallback(response){
+            console.log(response);
+            console.log('none')
+        });
+    });
+
+
+
+
+</script>
 {% endblock %}
