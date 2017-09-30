@@ -1,39 +1,68 @@
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
+from django.views import View
+from django.views.generic import ListView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils.decorators import method_decorator
+from django.utils import timezone
 from .forms import ExpenseForm
 from .models import Expense
+from .serializers import ExpenseSerializer
 
 
 # Create your views here.
 
-@login_required
-def profile(request):
-    return render(request, 'profile.html', {})
+class ProfileView(View):
+    template_name = 'profile.html'
+    
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(ProfileView, self).dispatch(*args, **kwargs)
+    
+    def get(self,request):
+        print(self.template_name)
+        return render(request,self.template_name,{})
 
 
-@login_required
-def add_details(request):
-    print (request.user.id)
-    form = ExpenseForm(initial={'user': request.user.id})
-    if request.method == 'POST':
-        form = ExpenseForm(request.POST)
+
+class AddDetails(View):
+    form_class = ExpenseForm
+    template_name = 'add_details.html'
+
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(AddDetails,self).dispatch(*args, **kwargs)
+    
+    def get(self,request):
+        form = self.form_class(initial={'user': request.user.id})
+        return render(request, self.template_name,{'form':form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
         if form.is_valid():
-            print(form.cleaned_data)
             form.save()
             return HttpResponseRedirect('/accounts/profile')
-    return render(request, 'add_details.html', {'form': form})
+
+class ModelView(ListView):
+    model = Expense
+    template_name = 'expense_list.html'
 
 
-@csrf_exempt
-def profile_api(request):
-    print(request.method)
-    if request.method == 'POST':
-        print(request.body)
-        id_ = request.body.decode('utf-8')
-        print(id_)
-        data = Expense.objects.filter(user_id=int(id_)).values()
-        print(data)
-        return JsonResponse({'table_data':list(data)}, safe=False)
-    return HttpResponse("called")
+    def get_queryset(self):
+        print(dir(self))
+        return Expense.objects.filter(user_id = self.request.user.id)
+
+class ProfileApi(APIView):
+
+    def dispatch(self, *args, **kwargs):
+        return super(ProfileApi, self).dispatch(*args, **kwargs)
+    
+    def get(self,request,format='json'):
+        obj = Expense.objects.filter(user_id=request.user.id)
+        serializer=ExpenseSerializer(obj,many=True)
+        return Response(serializer.data)

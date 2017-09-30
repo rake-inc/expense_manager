@@ -36,8 +36,6 @@
  <div google-chart chart="myChartObject" style="height:370px; width:100%;"></div>
 </div>
 <script type="text/javascript">
-	username = "{{user.id}}"
-	console.log(username);
      var chart = angular.module('chartApp',['googlechart']);
      chart.config(function($interpolateProvider) {
     $interpolateProvider.startSymbol('$$');
@@ -45,13 +43,13 @@
   });
     chart.controller('charCtrl',function($scope,$http){
         $http({
-            method : 'POST',
+            method : 'GET',
             url : 'http://localhost:8000/accounts/api/profile/',
-            data : username,
         }).then(function succesCallback(response){
         	console.log('success');
         	 $scope.field = [];
-            $scope.data = response.data['table_data'];
+             console.log(response.data)
+            $scope.data = response.data;
             console.log($scope.data);
             for(let i=0 ; i<$scope.data.length ; i++){
                 var price = {} ,dict = {}, params =[];

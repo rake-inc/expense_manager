@@ -7,3 +7,6 @@ class Expense(models.Model):
     price = models.IntegerField(blank=True,null=False)
     description = models.TextField(max_length=128,blank=True,null=False)
     user = models.ForeignKey(User)
+
+    def __str__(self):
+    	return self.category
