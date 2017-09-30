@@ -33,7 +33,7 @@ class UserSignup(View):
 class AuthLogout(View):
 
 	@method_decorator(login_required)
-	def dispatch(self, request):
+	def dispatch(self,  *args, **kwargs):
 		return super(AuthLogout,self).dispatch(*args, **kwargs)
 
 	def get(self, request):
